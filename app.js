@@ -1,26 +1,23 @@
 const express=require('express')
 const app =express();
 const path= require('path');
-const bodyParser= require('body-parser');
+// const bodyParser= require('body-parser');
 const conn= require('./config/db');
+const cookiesPaerser= require('cookie-parser');
+
 const ejs= require('ejs');
 app.set('view engine', 'ejs');
 app.set('views', 'views')
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:false}));
-
+app.use(express.json());
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({extended:false}));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cookiesPaerser());
 
+const authRoutes= require('./routes/authRoutes');
 
-app.get('/', (req,res)=>{
-
-    res.render('index')
-});
-app.get('/smoothies', (req,res)=>{
-
-    res.render('smoothies')
-});
+app.use('/', authRoutes);
 
 conn.connection.on('error', (err)=>{
 

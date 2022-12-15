@@ -7,7 +7,7 @@ useUnifiedTopology: true})
     console.log("DB Connected");
 })
 .catch(err=>{
-    console.log(err.message);
+    console.log("DD Connection failed", err.message);
 })
 
 module.exports= mongoose;
