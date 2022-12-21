@@ -20,7 +20,10 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
+     
+    //RESETTING THE FRONTEND ERROR TEXT
+    emailError.textContent='';
+    pwdError.textContent='';
     // get values
     const email = form.email.value;
     const password = form.password.value;
@@ -31,6 +34,16 @@ try{
         headers:{'Content-type':'application/json'}
      });
      const data = await res.json();
+     console.log(data);
+     if(data.user){
+      location.assign('/');
+     }
+     if(data.errors){
+      
+      emailError.textContent= data.errors.email;
+      pwdError.textContent =data.errors.password;
+     }
+
 }catch(err){
 
 }

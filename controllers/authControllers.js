@@ -2,13 +2,18 @@ const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 
 const handleErrors = (error) => {
-    console.log(error.message, error.code);
+    // console.log(error.message, error.code);
     let errors = { email: '', password: '' };
 
+    //invalid credentials error
+    if(error.message==='Invalid Credentials'){
+        errors.email = 'Invalid Login Credentials'
+        return errors;
+    }
 
-    //duplicate error code
-    if(error.code ===11000){
-        errors.email='Email is already registered.'
+    // Duplicate Error Code
+    if (error.code === 11000) {
+        errors.email = 'Email is already registered.'
         return errors;
     }
 
@@ -18,16 +23,18 @@ const handleErrors = (error) => {
 
             errors[properties.path] = properties.message
         });
+
     }
     return errors;
+
 }
 
-const maxaAge= 2*24*60*60;
-const createToken = (id)=>{
+const maxAge = 5 * 60 * 1000;
+const createToken = (id) => {
 
 
-    return jwt_sign({id},'This secret key must be saved into a ENV variable', {
-        expireIn:maxaAge
+    return jwt.sign({ id }, 'This secret key must be saved into a ENV variable', {
+        expiresIn: maxAge
     });
 }
 
@@ -42,16 +49,17 @@ exports.getSignup = async (req, res, next) => {
 
 exports.postSignup = async (req, res, next) => {
 
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    email = email.trim();
     try {
         const user = await User.create({ email, password });
         const token = createToken(user._id);
-        res.cookie('jwt', token , {httpOnly:true, maxaAge:maxaAge*100});
+        res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 100 });
+        res.status(201).json({ user: user._id });
 
     } catch (error) {
-
-       let err= handleErrors(error);
-        res.status(429).json(err)
+        let errors = handleErrors(error);
+        res.status(400).json({ errors });
 
     }
 
@@ -64,13 +72,24 @@ exports.getSignin = async (req, res, next) => {
 }
 
 exports.postSignin = async (req, res, next) => {
-
+    const { email, password } = req.body;
     try {
-        const { email, password } = req.body;
-        console.log(req.body);
-        res.status(200).json(req.body);
+
+        const user= await User.login(email, password);
+        const token= createToken(user._id);
+        res.cookie('jwt', token , {httpOnly:true,  maxAge:maxAge});
+        return res.status(200).json({user:user._id});
+
+
     } catch (error) {
-        handleErrors(error);
+        let errors = handleErrors(error);
+        // console.log(error.message);
+        res.status(429).json({ errors})
     }
 }
 
+exports.getLogOut = async (req, res, next) =>{
+    res.cookie('jwt', '', {maxAge:1});
+    res.redirect('/');
+
+}

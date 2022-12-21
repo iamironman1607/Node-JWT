@@ -20,7 +20,7 @@ const userSchema = new Schema({
     timestamps: true
 });
 
-//fire thois before doc save to DB
+//fire this before doc save to DB
 userSchema.pre('save', async function(next){
 
     const salt= await bcrypt.genSalt(10);
@@ -28,7 +28,23 @@ userSchema.pre('save', async function(next){
     next();
 });
 
-
+//static method to login user
+userSchema.statics.login= async function(email, password){
+     
+      const user= await this.findOne({email});
+      if(user){
+               let isMatched= await bcrypt.compare(password, user.password);
+               if(isMatched){
+                return user;
+               }
+               
+                throw Error('Invalid Credentials')
+               
+      }
+     
+  throw Error('Invalid Credentials')
+      
+}
 
 const User = mongoose.model("user", userSchema);
 module.exports = User;
